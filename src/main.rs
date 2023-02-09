@@ -1,7 +1,7 @@
 use wav::{Header, BitDepth, read, write};
 
+// TODO     Untested
 fn maximize_bitdepth_thirtytwof(data: Vec<f32>) -> Vec<f32> {
-    println!("BitDepth: 32f");
     let abs_max : f32 = data.iter().fold(0.0,
         |acc, &s|
             if s.abs() > acc {
@@ -10,23 +10,20 @@ fn maximize_bitdepth_thirtytwof(data: Vec<f32>) -> Vec<f32> {
                 acc
             }
     );
-    let vol_ratio = abs_max / (f32::MAX - f32::MIN);
-    println!("Current volume ratio: {:.2}%", vol_ratio);
-    let ampl_ratio = 1.0 / vol_ratio;
+    let ampl_ratio = (f32::MAX - f32::MIN) / abs_max;
+    println!("BitDepth: 32f, amplify the sound by {:.2}%", ampl_ratio);
 
     data.iter().map(|s| *s * ampl_ratio).collect()
 }
 
+// TODO     Untested
 fn maximize_bitdepth_twentyfour(data: Vec<i32>) -> Vec<i32> {
     let bitdepth_absmax_val = 2^24;
-    println!("BitDepth: 24");
     let val_min = data.iter().min().expect("No data");
     let abs_max = val_min.abs().max(*data.iter().max().unwrap());
 
-    let vol_ratio = (abs_max as f64) / (2.0*(bitdepth_absmax_val as f64));
-    println!("Current volume ratio: {:.2}%", vol_ratio);
-
-    let ampl_ratio = 1.0 / vol_ratio;
+    let ampl_ratio = (2.0*(bitdepth_absmax_val as f64)) / (abs_max as f64);
+    println!("BitDepth: 24, amplify the sound by {:.2}%", ampl_ratio);
 
     data.iter().map(|s|
         ((*s as f64) * ampl_ratio) as i32
@@ -34,29 +31,24 @@ fn maximize_bitdepth_twentyfour(data: Vec<i32>) -> Vec<i32> {
 }
 
 fn maximize_bitdepth_sixteen(data: Vec<i16>) -> Vec<i16> {
-    println!("BitDepth: 16");
     let val_min = data.iter().min().expect("No data");
     let abs_max = val_min.abs().max(*data.iter().max().unwrap());
 
-    let vol_ratio = (abs_max as f64) / (i16::MAX as f64);
-    println!("Current volume ratio: {:.2}%", vol_ratio);
-
-    let ampl_ratio = 1.0 / vol_ratio;
+    let ampl_ratio = (i16::MAX as f64) / (abs_max as f64);
+    println!("BitDepth: 16, amplify the sound by {:.2}%", ampl_ratio);
 
     data.iter().map(|s|
         ((*s as f64) * ampl_ratio) as i16
     ).collect()
 }
 
+// TODO     Untested
 fn maximize_bitdepth_eight(data: Vec<u8>) -> Vec<u8> {
-    println!("BitDepth: 8");
     let val_min = data.iter().min().expect("No data");
     let abs_max = (u8::MAX - val_min).max(*data.iter().max().unwrap());
 
-    let vol_ratio = (abs_max as f64) / ((u8::MAX as f64) - (u8::MIN as f64));
-    println!("Current volume ratio: {:.2}%", vol_ratio);
-
-    let ampl_ratio = 1.0 / vol_ratio;
+    let ampl_ratio = ((u8::MAX as f64) - (u8::MIN as f64)) / (abs_max as f64);
+    println!("BitDepth: 8, amplify the sound by {:.2}%", ampl_ratio);
 
     let mid = u8::MAX / 2;
     data.iter().map(|s|
@@ -91,9 +83,7 @@ fn maximize_volume(fpath: &std::path::Path, hdr: Header, data: BitDepth) {
 }
 
 fn write_wav_file(fpath: &std::path::Path, hdr: Header, data: BitDepth) {
-    let outf = fpath.with_file_name("out.wav");
-    println!("Writing to {}", outf.to_str().unwrap());
-    let mut wavfile = std::fs::File::create(outf).expect("Unable to open wav file");
+    let mut wavfile = std::fs::File::create(fpath).expect("Unable to open wav file");
     write(hdr, &data, &mut wavfile).expect("Unable to write WAV file")
 }
 
@@ -107,13 +97,11 @@ fn main() {
         if !fpath.exists() {
             println!("Input file {} not found, ignoring ...", f);
         }
-        println!("Treating {}", f);
         let (header, data) = {
             let mut wavfile = std::fs::File::open(&fpath).expect("Unable to open wav file");
             read(&mut wavfile).expect("Unable to read WAV data from file")
         };
         maximize_volume(&fpath, header, data);
-        println!();
     }
 
 }
