@@ -10,20 +10,25 @@ fn maximize_bitdepth_thirtytwof(data: Vec<f32>) -> Vec<f32> {
                 acc
             }
     );
-    let ampl_ratio = (f32::MAX - f32::MIN) / abs_max;
-    println!("BitDepth: 32f, amplify the sound by {:.2}%", ampl_ratio);
+    if abs_max == 0.0 {
+        return data
+    }
+    let ampl_ratio = f32::MAX / abs_max;
+    println!("BitDepth: 32f, amplify the sound by {:.2}%", (ampl_ratio-1.0)*100.0);
 
     data.iter().map(|s| *s * ampl_ratio).collect()
 }
 
-// TODO     Untested
 fn maximize_bitdepth_twentyfour(data: Vec<i32>) -> Vec<i32> {
-    let bitdepth_absmax_val = 2^24;
     let val_min = data.iter().min().expect("No data");
     let abs_max = val_min.abs().max(*data.iter().max().unwrap());
+    if abs_max == 0 {
+        return data
+    }
 
-    let ampl_ratio = (2.0*(bitdepth_absmax_val as f64)) / (abs_max as f64);
-    println!("BitDepth: 24, amplify the sound by {:.2}%", ampl_ratio);
+
+    let ampl_ratio = (i32::MAX as f64) / (abs_max as f64);
+    println!("BitDepth: 24, amplify the sound by {:.2}%", (ampl_ratio-1.0) * 100.0);
 
     data.iter().map(|s|
         ((*s as f64) * ampl_ratio) as i32
@@ -33,9 +38,12 @@ fn maximize_bitdepth_twentyfour(data: Vec<i32>) -> Vec<i32> {
 fn maximize_bitdepth_sixteen(data: Vec<i16>) -> Vec<i16> {
     let val_min = data.iter().min().expect("No data");
     let abs_max = val_min.abs().max(*data.iter().max().unwrap());
+    if abs_max == 0 {
+        return data
+    }
 
     let ampl_ratio = (i16::MAX as f64) / (abs_max as f64);
-    println!("BitDepth: 16, amplify the sound by {:.2}%", ampl_ratio);
+    println!("BitDepth: 16, amplify the sound by {:.2}%", (ampl_ratio-1.0) * 100.0);
 
     data.iter().map(|s|
         ((*s as f64) * ampl_ratio) as i16
@@ -46,9 +54,12 @@ fn maximize_bitdepth_sixteen(data: Vec<i16>) -> Vec<i16> {
 fn maximize_bitdepth_eight(data: Vec<u8>) -> Vec<u8> {
     let val_min = data.iter().min().expect("No data");
     let abs_max = (u8::MAX - val_min).max(*data.iter().max().unwrap());
+    if abs_max == 0 {
+        return data
+    }
 
-    let ampl_ratio = ((u8::MAX as f64) - (u8::MIN as f64)) / (abs_max as f64);
-    println!("BitDepth: 8, amplify the sound by {:.2}%", ampl_ratio);
+    let ampl_ratio = (u8::MAX as f64) / (abs_max as f64);
+    println!("BitDepth: 8, amplify the sound by {:.2}%", (ampl_ratio-1.0) * 100.0);
 
     let mid = u8::MAX / 2;
     data.iter().map(|s|
