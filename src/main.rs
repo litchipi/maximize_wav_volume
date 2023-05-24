@@ -110,7 +110,14 @@ fn main() {
         }
         let (header, data) = {
             let mut wavfile = std::fs::File::open(&fpath).expect("Unable to open wav file");
-            read(&mut wavfile).expect("Unable to read WAV data from file")
+            println!("\n{}", &fpath.to_str().unwrap());
+            match read(&mut wavfile) {
+                Ok(res) => res,
+                Err(e) => {
+                    println!("Unable to read WAV file {}: {}, skipping...", fpath.to_str().unwrap(), e);
+                    continue;
+                },
+            }
         };
         maximize_volume(&fpath, header, data);
     }
